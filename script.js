@@ -192,7 +192,7 @@ document.getElementById("team-member-size").addEventListener("change", e => {
 
 async function sendFormDataToServer(e) {
     try {
-        let t = await fetch("https://script.google.com/macros/s/AKfycbxjLIJzmKMJnGw8iA6kp7wJftmZrT12Gz5zSKo8z7B9D3o2p3fiRhCz6rx_PabrzY0m/exec", {
+        let t = await fetch("https://script.google.com/macros/s/AKfycbwsuq4RpcDlAtG3wyCgpNbh-194hjJ4w_kgHKam8_eNBLiXESm9Fck2p74wwaW56Pcv/exec", {
                 method: "POST",
                 body: JSON.stringify(e)
             }),
