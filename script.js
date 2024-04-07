@@ -131,154 +131,121 @@ var Notify = function () {
 
 // Main Script
 
-
-function validateCurrentFieldset() {
-    var isValid = true;
-
-    // Check for required fields in the current fieldset
-    current_fs.find(".required").each(function () {
-        if ($(this).val() === "") {
-            isValid = false;
-            // You can customize this part to show error messages or highlight the fields
-            // alert("Please fill in all required fields.");
-            new Notify({
-                status: "warning",
-                title: "Please fill in all required fields.",
-                text: "",
-                autoclose: !0,
-                autotimeout: 3e3,
-                effect: "slide",
-                speed: 300,
-                position: "right bottom"
-            })
-            return false; // Exit the loop early if any field is empty
-        }
-    });
-
-    return isValid;
-}
-
-function previewImage(e, t) {
-    if (e.files && e.files[0]) {
-        var a = new FileReader;
-        a.onload = function (e) {
-            t.src = e.target.result, t.style.display = "block"
-        }, a.readAsDataURL(e.files[0])
-    } else t.style.display = "none"
-}
-
-function setupImagePreview(e, t) {
-    var a = document.getElementById(e),
-        s = document.getElementById(t);
-    a.addEventListener("change", function (e) {
-        previewImage(e.target, s)
-    })
-}
-
-setupImagePreview("idCard", "preview"), setupImagePreview("team-member-2-idCard", "team-member-2-id-preview"), setupImagePreview("payment-screenshot", "payment-screenshot-preview");
-
-function setRequiredAttributes(e, t) {
-    e && e.querySelectorAll("input, select").forEach(function (e) {
-        t ? e.setAttribute("required", t.toString()) : e.removeAttribute("required")
-    })
-}
 let loader = document.getElementById("register-loader");
-let a = document.getElementById("payment-amount");
 
-document.getElementById("team-member-size").addEventListener("change", e => {
-    let t = document.getElementById("team-member-2-details");
-    2 == e.target.value ? (t.style.display = "flex", setRequiredAttributes(t, !0), a.innerHTML = "₹198") : (t.style.display = "none", setRequiredAttributes(t, !1), a.innerHTML = "₹99")
-})
+
+// Basic validation function
+function validateData(data) {
+    // Check if email is valid
+    if (!isValidEmail(data.email)) {
+        return false;
+    }
+
+    // Check if abstract is not empty
+    if (!data.abstract.trim()) {
+        return false;
+    }
+
+    // Check if GitHub URL is valid
+    if (!isValidURL(data.githubURL)) {
+        return false;
+    }
+
+    // Check if video URL is valid
+    if (!isValidURL(data.videoURL)) {
+        return false;
+    }
+
+    // All validation passed
+    return true;
+}
+
+// Function to validate email format
+function isValidEmail(email) {
+    // Regular expression for email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+// Function to validate URL format
+function isValidURL(url) {
+    // Regular expression for URL validation
+    const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+    return urlRegex.test(url);
+}
 
 async function sendFormDataToServer(e) {
     try {
-        let t = await fetch("https://script.google.com/macros/s/AKfycbwsuq4RpcDlAtG3wyCgpNbh-194hjJ4w_kgHKam8_eNBLiXESm9Fck2p74wwaW56Pcv/exec", {
-                method: "POST",
-                body: JSON.stringify(e)
-            }),
-            a = await t.json();
-            loader.style.display = "none", console.log("response", a);
-        let s = a.result,
-            i, l;
-        return "success" === s ? (i = "Registration Successful", l = "Thank you for registering with us!") : "error" === s ? (i = "Registration Failed", l = "Oops! Something went wrong. Please try again.") : (i = "Unexpected Response", l = "An unexpected response was received. Please contact support."), new Notify({
-            status: s,
-            title: i,
-            text: l,
-            autoclose: !0,
-            autotimeout: 3e3,
-            effect: "slide",
-            speed: 300,
-            position: "right bottom"
-        }), "success" === s
-    } catch (r) {
-        return loader.style.display = "none", console.error("Error:", r), new Notify({
-            status: "error",
-            title: "Registration Error",
-            text: "Sorry, your registration could not be recorded. Please try again later.",
-            autoclose: !0,
-            autotimeout: 3e3,
-            effect: "slide",
-            speed: 300,
-            position: "right bottom"
-        }), !1
+        let t = await fetch("https://script.google.com/macros/s/AKfycbxjLIJzmKMJnGw8iA6kp7wJftmZrT12Gz5zSKo8z7B9D3o2p3fiRhCz6rx_PabrzY0m/exec", {
+            method: "POST",
+            body: JSON.stringify(e)
+        });
+        let a = await t.json();
+        // console.log("response", a);
+        return a;
+    } catch (error) {
+        console.error("Error sending form data:", error);
+        throw error; // Re-throw the error
     }
 }
 
-document.getElementById("myForm").addEventListener("submit", async function (e) {
+document.getElementById("submissionForm").addEventListener("submit", async function (e) {
     e.preventDefault();
-    let t = document.getElementById("RegisterButton");
-    t.disabled = !0, t.innerHTML = "proceeding...", loader.style.display = "block";
+    let t = document.getElementById("submissionButton");
+    t.disabled = true;
+    t.innerHTML = "Submitting...";
+    loader.style.display = "block";
 
-    let r = new FileReader,
-        n, m, p, o, d = (e, t) => new Promise((a, s) => {
-            t.onloadend = () => a(t), t.readAsDataURL(e)
-        });
-
-    await d(this.elements.idCard.files[0], r),
-        this.elements.TeamMemberSize.value == 2 && this.elements.TeamMember2idCard.files && this.elements.TeamMember2idCard.files[0] && await d(this.elements.TeamMember2idCard.files[0], p = new FileReader), this.elements.paymentScreenshot.files[0] && await d(this.elements.paymentScreenshot.files[0], o = new FileReader);
-
-    let u = {
-        name: this.elements.name.value,
+    let data = {
+        submission: true,
         email: this.elements.email.value,
-        phone: this.elements.phone.value,
-        college: this.elements.college.value,
-        department: this.elements.department.value,
-        year: this.elements.year.value,
-        idCard: {
-            base64: r.result.split("base64,")[1],
-            type: this.elements.idCard.files[0].type,
-            fileName: this.elements.idCard.files[0].name
-        },
-        teamSize: this.elements.TeamMemberSize.value ,
-        teamDetails: {
-            teamMembers: [{
-                name: this.elements.TeamMember2Name.value,
-                email: this.elements.TeamMember2Email.value,
-                phone: this.elements.TeamMember2Phone.value,
-                college: this.elements.TeamMember2College.value,
-                department: this.elements.TeamMember2Department.value,
-                year: this.elements.TeamMember2Year.value,
-                idCard: p ? {
-                    base64: p.result.split("base64,")[1],
-                    type: this.elements.TeamMember2idCard.files[0].type,
-                    fileName: this.elements.TeamMember2idCard.files[0].name
-                } : null
-            }, ]
-        },
-        payment: {
-            transactionScreenshot: o ? {
-                base64: o.result.split("base64,")[1],
-                type: this.elements.paymentScreenshot.files[0].type,
-                fileName: this.elements.paymentScreenshot.files[0].name
-            } : null,
-            transactionID: this.elements.transactionID.value,
-            amount: a.innerHTML.replace("₹","")
-        },
-        abstract: this.elements.websiteAbstract.value,
-        githubUrl: this.elements.githubCodeLink.value,
-        videoUrl: this.elements.googleDriveLink.value
+        abstract: this.elements.abstract.value,
+        githubURL: this.elements.githubURL.value,
+        videoURL: this.elements.videoURL.value,
     };
-    console.log(u);
-    let c = await sendFormDataToServer(u);
-    c ? (loader.style.display = "none", e.target.innerHTML = `<div class="container mt-5"><div class="alert alert-success text-center"><h4 class="alert-heading">Registration has been successfully recorded</h4><p>Thank you! Please check your mail for confirmation. Our team will review your information shortly.</p></div></div>`) : (t.disabled = !1, t.innerHTML = "Submit")
+
+    if (validateData(data)) {
+        t.disabled = false;
+        try {
+            let response = await sendFormDataToServer(data);
+            if (response.result == "success") {
+                loader.style.display = "none";
+                e.target.innerHTML = `<div class="container mt-5"><div class="alert alert-success text-center"><h4 class="alert-heading">Submission has been successfully recorded</h4></div></div>`;
+            } else if (response.result == "error") {
+                t.disabled = false;
+                t.innerHTML = "Submit";
+                new Notify({
+                    status: "error",
+                    title: "",
+                    text: response.message,
+                    autoclose: true,
+                    autotimeout: 3000,
+                    effect: "slide",
+                    speed: 300,
+                    position: "right bottom"
+                });
+            }
+
+            loader.style.display = "none";
+        } catch (error) {
+            console.error("Error handling form submission:", error);
+            t.disabled = false;
+            t.innerHTML = "Submit";
+            loader.style.display = "none";
+        }
+    } else {
+        console.log("Data is not valid.");
+        new Notify({
+            status: "error",
+            title: "",
+            text: "Please check the provided information and try again.",
+            autoclose: true,
+            autotimeout: 3000,
+            effect: "slide",
+            speed: 300,
+            position: "right bottom"
+        });
+        loader.style.display = "none";
+        t.disabled = false;
+    }
 });
